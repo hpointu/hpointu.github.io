@@ -14,7 +14,13 @@ large brush "strokes". Virtually speaking of course. Something like in Gimp
 when you make a brush stroke, it looks like a gaussian distribution around
 where you clicked.
 
-So my first task will be to write some code to simulate these brush strokes.
+So my task will be to write some code to simulate these brush strokes.
 Then I'll generate some random paths with random strokes sharpness along the
 way... We'll see how it goes.
+
+But I think I'll have to play around with manually created
+heightmaps first, so I can get a feel of what feels
+natural and what does not. So I can randomize it the 
+"right" way...
+
 
