@@ -17,7 +17,7 @@ motivated.  So here we go, I have no idea how to use this tool though so it
 might take a few days or weeks until I have something readable.
 
 As for the game itself, I've decided to give myself a few months to come up with
-a basic prototype. No fancy graphics or whatever but I want to expore some
+a basic prototype. No fancy graphics or whatever but I want to explore some
 features space and see what works and what doesn't. Depending how it goes, I'll
 develop the idea further. But because I have a full time job, as well as other
 side projects, I will only be able to dedicate a limited amount of time to that
