@@ -3,11 +3,14 @@ layout: post
 title:  "First things first"
 date:   2019-12-31 13:17:15 +0000
 categories: [blog, life]
+excerpt_separator: <!--MORE-->
 ---
 
 That's it, we're live
 
 I have no idea what I'm doing, but I've decided to start a dev blog.
+
+<!--MORE-->
 
 I want to write a game, and I figured keeping a blog would help keeping me
 motivated.  So here we go, I have no idea how to use this tool though so it
