@@ -3,6 +3,7 @@ layout: post
 title:  "Creating some maps"
 date:   2019-12-31 23:32:00 +0000
 categories: [blog, dev]
+comments: true
 ---
 
 I'm still not sure how I'll generate my islands. I have a few completely

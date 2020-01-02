@@ -4,6 +4,7 @@ title:  "First things first"
 date:   2019-12-31 13:17:15 +0000
 categories: [blog, life]
 excerpt_separator: <!--MORE-->
+comments: true
 ---
 
 That's it, we're live
