@@ -288,6 +288,9 @@ Let's try to define a very simple function, to open a window in vim. It will tak
 
 Now I'll let you read the documentation for `:h nvim_open_win`, and `:h nvim_create_buf`, since we'll probably need some text to but inside our window.
 
+TODO: elaborate. nvim.* ? Aniseed.
+Elaborate also the idea behing buffer/window.
+
 Our first version will look something like that:
 
 ```lisp
@@ -315,7 +318,7 @@ Now you can evaluate this function, using Conjure, and try to call it.
 
 This is me trying different positions and size for my window:
 
-<script src="https://asciinema.org/a/q3K122jNJgxBPMVLmBWSqXEMO.js" id="asciicast-q3K122jNJgxBPMVLmBWSqXEMO" async data-autoplay="true"></script>
+<script src="https://asciinema.org/a/q3K122jNJgxBPMVLmBWSqXEMO.js" id="asciicast-q3K122jNJgxBPMVLmBWSqXEMO"></script>
 
 Here, you can start to get a feel of what it's like to be able to evaluate code on the fly, and see the result immediately.
 
