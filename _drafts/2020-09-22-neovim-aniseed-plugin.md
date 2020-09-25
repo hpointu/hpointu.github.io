@@ -270,17 +270,62 @@ The provider for such synonyms is to be decided yet, for now what is itching my 
 
 I simply have no idea of how to do that with vim.
 
-So we'll setup this simple function, that will serve as a stub that we're going to use to try out a few different ways of suggesting words to the user :
-
-```lisp
-(defn get-synonyms [word]
-  ["bloke" "thesaurus" "spider" "gregorian"])
-```
-
 This is a pretty dumb function... Whatever word you give to it, it returns the same list of words.
 
 But that's enough for us, we'll use that as our suggestion list to display to the user. Don't forget to evaluate this function so it's part of our runtime.
 
 The kind of UI we want is similar to vim completion popup, I suppose. That is, a little popup list that opens next to the cursor location, let the user select something, and confirm the choice to replace the targeted word.
 
-Let's document ourself a bit about that `complete` thing, reading the vim doc `:h complete`.
+After reading a bit of the documentation in vim `:h complete` and `:h completefunc`, it seems to me that while this is probably perfecty suitable for our need, we won't have much room to experiment, as the `completefunc` and `omnifunc` features in vim are pretty much made for text completion, triggered in insert mode, with a very specific way to register a very specific function.
+
+We'll have a bit more fun and we'll use floating windows instead.
+
+Let's try to define a very simple function, to open a window in vim. It will take a position relative to the vim's main window (a column number and a row number) as well as a size (width and height):
+
+```lisp
+(defn open-window [col row width height] ...)
+```
+
+Now I'll let you read the documentation for `:h nvim_open_win`, and `:h nvim_create_buf`, since we'll probably need some text to but inside our window.
+
+Our first version will look something like that:
+
+```lisp
+(defn make-window
+  [col row width height]
+  (let [buf (nvim.create_buf false true) ;; a non-listed, scratch buffer
+       ;; defining a few options for my window:
+        opts {:style "minimal"
+              :relative "editor"
+              :width width
+              :height height
+              :row row
+              :col col}]
+    ;; "wipe" seem to mean we get rid of the buffer when it's hidden,
+    ;; as in, for real. No remain. I like that.
+    (nvim.buf_set_option buf "bufhidden" "wipe")
+    ;; This is the call to actually open the window
+    (nvim.open_win buf true opts)))
+```
+
+I'm still not too sure about the options I chose. I'm still discovering all that, so I picked things that
+seemed to make sense from the documentation.
+
+Now you can evaluate this function, using Conjure, and try to call it.
+
+This is me trying different positions and size for my window:
+
+<script src="https://asciinema.org/a/q3K122jNJgxBPMVLmBWSqXEMO.js" id="asciicast-q3K122jNJgxBPMVLmBWSqXEMO" async data-autoplay="true"></script>
+
+Here, you can start to get a feel of what it's like to be able to evaluate code on the fly, and see the result immediately.
+
+
+TODO: start populating the content of the window
+...
+
+So we'll setup this simple function, that will serve as a stub that we're going to use to try out a few different ways of suggesting words to the user :
+
+```lisp
+(defn get-synonyms [word]
+  ["bloke" "thesaurus" "spider" "gregorian"])
+```
