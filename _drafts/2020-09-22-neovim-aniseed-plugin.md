@@ -270,13 +270,10 @@ The provider for such synonyms is to be decided yet, for now what is itching my 
 
 I simply have no idea of how to do that with vim.
 
-This is a pretty dumb function... Whatever word you give to it, it returns the same list of words.
-
-But that's enough for us, we'll use that as our suggestion list to display to the user. Don't forget to evaluate this function so it's part of our runtime.
-
 The kind of UI we want is similar to vim completion popup, I suppose. That is, a little popup list that opens next to the cursor location, let the user select something, and confirm the choice to replace the targeted word.
 
 After reading a bit of the documentation in vim `:h complete` and `:h completefunc`, it seems to me that while this is probably perfecty suitable for our need, we won't have much room to experiment, as the `completefunc` and `omnifunc` features in vim are pretty much made for text completion, triggered in insert mode, with a very specific way to register a very specific function.
+Again, nothing wrong with that, but that will defeat the point of our exploration, I suppose. We'd have to focus straight away on VimL specific concerns if we were to go down that road.
 
 We'll have a bit more fun and we'll use floating windows instead.
 
@@ -286,11 +283,33 @@ Let's try to define a very simple function, to open a window in vim. It will tak
 (defn open-window [col row width height] ...)
 ```
 
-Now I'll let you read the documentation for `:h nvim_open_win`, and `:h nvim_create_buf`, since we'll probably need some text to but inside our window.
+Hmmm. I simply have No Idea of what to put inside that function. Like I said, I have zero knowledge of Vim's API.
 
-TODO: elaborate. nvim.* ? Aniseed.
-Elaborate also the idea behing buffer/window.
+By typing `:h open` and trying to complete in my vim command, I saw `nvim_open_win`.
+This led me to a nice place in the Vim doc, `:h api-floatwin`, which gives away very valuable information.
 
+Now I'll let you read the documentation for that, as well as `:h nvim_open_win`, and `:h nvim_create_buf`, as the doc is self explanatory.
+
+One piece of information we need is the how to access that from fennel.
+One way we can access the Lua api (fennel compiles to Lua, and have access to all Lua functions), is with things like:
+
+```lisp
+(vim.api.nvim_create_buf ...)
+```
+
+We could be using this form of API calls to access Vim's capabilities, but this will become very verbose and cumbersome for some of the capabilities that Vim exposes.
+Instead, Aniseed expose a little Lua module `aniseed.nvim` which makes access to Vim's API a bit more friendly to Lua users, and by extension, us, Fennel users.
+
+In order to use this module, we'll use Aniseed's module loading system. Along with our module definition, we can include a `require` map:
+
+```lisp
+(module more-like-that.main
+  {require {nvim aniseed.nvim}})
+```
+
+What we're doing here is loading the `aniseed.nvim` module and make it accessible through the locally defined table `nvim`. We could give it any name, but `nvim` is explicit.
+
+We can now have a go at writing our window-opening function.
 Our first version will look something like that:
 
 ```lisp
@@ -311,10 +330,13 @@ Our first version will look something like that:
     (nvim.open_win buf true opts)))
 ```
 
-I'm still not too sure about the options I chose. I'm still discovering all that, so I picked things that
-seemed to make sense from the documentation.
+I'm still not too sure about the options I chose.
+I'm still discovering all that, so I picked things that seemed to make sense from the documentation.
 
 Now you can evaluate this function, using Conjure, and try to call it.
+
+I encourage you to play with different options, to get familiar with them.
+You can juste re-evaluate your function whenever you change it, with `\er` for example, and play around with it.
 
 This is me trying different positions and size for my window:
 
@@ -322,8 +344,7 @@ This is me trying different positions and size for my window:
 
 Here, you can start to get a feel of what it's like to be able to evaluate code on the fly, and see the result immediately.
 
-
-TODO: start populating the content of the window
+# populating the window with some content
 ...
 
 So we'll setup this simple function, that will serve as a stub that we're going to use to try out a few different ways of suggesting words to the user :
@@ -332,3 +353,10 @@ So we'll setup this simple function, that will serve as a stub that we're going 
 (defn get-synonyms [word]
   ["bloke" "thesaurus" "spider" "gregorian"])
 ```
+
+This is a pretty dumb function... Whatever word you give to it, it returns the same list of words.
+
+But that's enough for us, we'll use that as our suggestion list to display to the user. Don't forget to evaluate this function so it's part of our runtime.
+
+
+# Test
