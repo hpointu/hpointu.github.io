@@ -148,7 +148,7 @@ Although if we try to eval the definition of the function and the call to that f
 ; * Try binding hello as a local in the scope of this code.
 ```
 
-Let's try to analyze what's happening: `unknown global in strict mode: hello`. It's as if our `hello` function doesn't belong to the scope where we invoke it.
+Let's try to analyze what's happening: `unknown global in strict mode: hello`. It's as if our `hello` function didn't belong to the scope where we invoke it.
 
 Well, it kind of makes sense: when we evaluated our code, Conjure sent it to Fennel, who compiled our function and yielded it in one "compilation unit".
 But that compilation unit didn't persist anywhere.
