@@ -715,7 +715,7 @@ We are iterating over all letters, and for each of them, like say `k`, we're map
 
 Forgive the sacrilege please, I don't know how else I can do it...
 
-After adding the `disable-keys` and `install-popup-mappings`, function to the pipeline, let's review our entire code so far:
+After adding the `disable-keys` and `install-popup-mappings` functions to the pipeline, let's review our entire code so far:
 
 ```lisp
 (module more-like-that.main
