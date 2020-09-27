@@ -869,7 +869,7 @@ Now the only thing we need is to replace our stub list with a call to the `get-s
 
 # Minor improvements
 
-Right now, our popup widow pops up at always the same place.
+Right now, our popup window pops up at always the same place.
 It would be nice if, instead, its position was relative to the position of the cursor.
 
 We'll remove the `col` and `row` arguments of our `make-window` function,
@@ -907,7 +907,7 @@ The `command_` is the name our nvim module uses to expose `:command!`.
 
 We give our command the name "MLTSynonyms", and its replacement text is the lua invokation of our `activate` function.
 
-_Tip: just evaluating the declaration of the command should register our command in your running instance of Vim. You can veryfy that by then typing the vim command :MLT and to a tab completion to ensure it's here. If you do that while being on an interesting word, you should even be able to replace it with a synonym!_
+_Tip: just evaluating the declaration of the command should register our command in your running instance of Vim. You can verify that by then typing the vim command :MLT and to a tab completion to ensure it's here. If you do that while being on an interesting word, you should even be able to replace it with a synonym!_
 
 So our plugin is working.
 
