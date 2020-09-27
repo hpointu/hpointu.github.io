@@ -1114,3 +1114,6 @@ Plug 'hpointu/mlt.nvim' , {'dir': '~/Dev/nvim/more-like-that'}
 to our vim config, so we point to our local directory.
 
 Open a new vim instance to edit a text file, and try the command `:MLTSynonyms`.
+
+
+You can find the repository for the plugin [Here](https://github.com/hpointu/mlt.nvim)
