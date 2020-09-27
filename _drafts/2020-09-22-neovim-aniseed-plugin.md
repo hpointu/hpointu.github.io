@@ -1,6 +1,7 @@
 ---
 layout: post
 title:  "Neovim plugins with Fennel and Aniseed"
+date:   2020-09-27 21:15:00 +0100
 categories: [blog, dev]
 comments: true
 ---
@@ -21,27 +22,27 @@ Unfortunately, that day, it didn't work. But it didn't matter, you'd try again a
 But it never worked... The truth is you never had any superpowers.
 That's ok, you came to peace with the idea a long time ago. Now life is a little bit different for you. You had a few jobs, working with computers. Writing code, still daydreaming from time to time, but with less hope.
 
-You're using this old-fashioned editor called [Vim](TODO). Sometimes you wish your editor could do something more for you. Deep inside, you start to feel like you could unleash some incredible power, if only you knew how to start...
+You're using this old-fashioned editor called [Vim](https://www.vim.org/). Sometimes you wish your editor could do something more for you. Deep inside, you start to feel like you could unleash some incredible power, if only you knew how to start...
 
-If only... Nah! You remember those candid thoughts you had as a child. How deceptive they were. But now you know better, there are no such things as superpowers. Tweaking your editor has nothing to do with magic anyways, all you need to do is learning this weird language called vimscript, or [VimL](TODO). You're not even sure about the name, let alone writing any meaningful program with it. All you know is life is too short to bother. So you give up the idea.
+If only... Nah! You remember those candid thoughts you had as a child. How deceptive they were. But now you know better, there are no such things as superpowers. Tweaking your editor has nothing to do with magic anyways, all you need to do is learning this weird language called vimscript, or [VimL](https://en.wikipedia.org/wiki/Vim_(text_editor)#Vim_script). You're not even sure about the name, let alone writing any meaningful program with it. All you know is life is too short to bother. So you give up the idea.
 
 Then the years go by...
 
-And then, one day... One day, you hear about "[Lisp](TODO)". You hear "Lisp" here, you hear "Lisp" there, "Lisp" "Lisp" "Lisp" "Lisp" everywhere (you need to whisper it in your head to get the effect).
+And then, one day... One day, you hear about "[Lisp](https://en.wikipedia.org/wiki/Lisp_(programming_language))". You hear "Lisp" here, you hear "Lisp" there, "Lisp" "Lisp" "Lisp" "Lisp" everywhere (you need to whisper it in your head to get the effect).
 So slowly, bit by bit, you start reading about it, you try to understand what this is about. Your curiosity is awake.
 You get interested in what other people are doing with it.
-Then you start taking it a bit more seriously, you read [SICP](TODO), then your mind explodes.
-You give it a go, and you discover the [REPL](TODO). That's it! You're that kid again. You believe in superpowers, once again.
+Then you start taking it a bit more seriously, you read [SICP](https://mitpress.mit.edu/sites/default/files/sicp/full-text/book/book.html), then your mind explodes.
+You give it a go, and you discover the [REPL](https://vimeo.com/223309989). That's it! You're that kid again. You believe in superpowers, once again.
 
 So you and your good old friend Vim are starting to feel alive again, you search around for the best tooling you can find to help you in your Lisp quest.
 You notice there are a few awesome people who went through the trouble of writing awesome tools with the awesome VimL, that enable you to write awesome code with an awesome Lisp. Deep inside you envy their courage, their dedication.
 
-Along the way, you have a vague remembrance of something called "[Neovim](TODO)". You decide to give it a go. Wow, so you can actually write neovim plugins in any language you want, since it exposes its API [through RPC](TODO). Interesting, could you maybe, just maybe, write a plugin in a Lisp? And, what's that? It also has a [Lua](TODO) runtime. This could come in handy as well, although it seems a bit remote from your current languages of interest. So you start nourishing the idea of writing some Lisp for Vim.
+Along the way, you have a vague remembrance of something called "[Neovim](https://neovim.io/)". You decide to give it a go. Wow, so you can actually write neovim plugins in any language you want, since it exposes its API [through RPC](https://neovim.io/doc/user/api.html#RPC). Interesting, could you maybe, just maybe, write a plugin in a Lisp? And, what's that? It also has a [Lua](https://www.lua.org/) runtime. This could come in handy as well, although it seems a bit remote from your current languages of interest. So you start nourishing the idea of writing some Lisp for Vim.
 
 But your child dreams are a long way behind you. You don't get over-excited. Until... Something unexpected happens...
 
-You stumble across something called "[Conjure](TODO)", written by the awesome [Oliver Caldwell](TODO).
-He's talking about a language, [Fennel](TODO), that is a lisp which compiles to Lua. And he's written a [whole suite](TODO) of tooling that makes writing fennel code for neovim a breeze. At least it appears so.
+You stumble across something called "[Conjure](https://conjure.fun/)", written by the awesome [Oliver Caldwell](https://oli.me.uk/).
+He's talking about a language, [Fennel](https://fennel-lang.org/), that is a lisp which compiles to Lua. And he's written a [whole suite](https://github.com/Olical/aniseed) of tooling that makes writing fennel code for neovim a breeze. At least it appears so.
 You could definitely use that to write the tools you always wanted in your editor!
 
 But there's still an issue. All this stuff is way too clever for your little brain. It's hard. So you decide to investigate, step by step, and before writing the tools you always wanted, you'll write one that nobody will ever want. Why? Because it's easier. Even you won't use it, but it'll teach you one thing or two.
@@ -56,7 +57,7 @@ Writing blog posts is long and cumbersome. We should automate it. Ok, maybe not 
 
 So here's what we're going to do: a plugin that suggests synonyms.
 
-[TODO: HERE A DEMO]
+<script id="asciicast-8nc40mW6aboYQBUuR9MLUhNWO" src="https://asciinema.org/a/8nc40mW6aboYQBUuR9MLUhNWO.js" async></script>
 
 **Disclaimer**: We'll take many detours that will lead us astray, very far from the optimal route.
 There are many better ways to write such an overly simple plugin.
@@ -68,15 +69,15 @@ The resulting plugin is just a pretext, to have some material to play with.
 # Let's get started
 
 One of the thing we like the most about Lisp is the interactive way of working with our code.
-Oliver Caldwell wrote [a nice post](TODO) about that.
+Oliver Caldwell wrote [a nice post](https://oli.me.uk/conversational-software-development/) about that.
 This is exactly what we are going to try. We know we can rely on Conjure to eval our fennel code.
 We will get a mockup of the plugin in this way, evaluating our code in vim. We don't want to bother with details such as packaging, yet.
 We want to be able to count on our runtime to provide us with the feedback we need, and build our program bit by bit, and just like this.
 
-Conjure is here to help you doing exactly that. But Conjure is not a small thing. It is built around [Aniseed](TODO), also made by Oliver Caldwell.
+Conjure is here to help you doing exactly that. But Conjure is not a small thing. It is built around [Aniseed](https://github.com/Olical/aniseed), also made by Oliver Caldwell.
 Aniseed is a nice piece of software that will make our life much easier to write our plugin in Fennel. But I reckon that this is a lot to take in at once if, like me, you have no previous experience with this type of stuff. 
 
-So, we'll try to deconstruct it. We'll make the assumption that Conjure is installed and well configured (although it's working out of the box), but we'll look at things only as Conjure users. Although we'll assume most of the time than we know nothing, I still suggest you take a little detour through the [Conjure School](TODO), at least to get a feel for what Conjure can do for its users.
+So, we'll try to deconstruct it. We'll make the assumption that Conjure is installed and well configured (although it's working out of the box), but we'll look at things only as Conjure users. Although we'll assume most of the time than we know nothing, I still suggest you take a little detour through the [Conjure School](https://github.com/Olical/conjure#try-without-installing), at least to get a feel for what Conjure can do for its users.
 
 # Getting familiar with Fennel inside Neovim
 
@@ -85,7 +86,7 @@ Let's verify that by writing the simplest piece of code we can think of in a new
 
 ![simple fennel](/assets/fennel/raw_fennel.png)
 
-I just pressed `\ee` (see [Conjure doc](TODO) to learn the basics of using Conjure) on the form to eval, and hop! It appears to be working like a charm. Look, it even prints our text in vim's message buffer at the bottom. We're getting closer to hacking vim now!
+I just pressed `\ee` (see [Conjure doc](https://github.com/Olical/conjure/blob/master/doc/conjure.txt) to learn the basics of using Conjure) on the form to eval, and hop! It appears to be working like a charm. Look, it even prints our text in vim's message buffer at the bottom. We're getting closer to hacking vim now!
 
 **Note**: In commands such as `\ee` or `\eb`, I'll assume `\` is your `<Leader>` key as well, but of course, you'll need to translate that should your configuration differ.
 
@@ -122,7 +123,7 @@ Now we'll make it accept an argument, and try to call it with an arbitrary value
 (hello "Zozo")
 ```
 
-Reading the [Fennel documentation](TODO) teaches us that the `..` function is for concatenating strings.
+Reading the [Fennel documentation](https://fennel-lang.org/reference#string-concatenation) teaches us that the `..` function is for concatenating strings.
 If we try to eval, using `\eb`, our whole buffer, we get something like that in conjure's log:
 
 ```lisp
@@ -159,7 +160,7 @@ It seems that using this bare-minimal method of evaluating sporadically one form
 # Ahead of Time (AOT) compilation
 
 The easiest solution that I can think of is to work at a file level, and when we're happy with the functions we're writing in a particular fnl file, we can use the fennel compiler ourselves on the entire file. This will give us a `.lua` file that we can place in our vim path, and load it as a normal lua file.
-This is what Fennel is calling [Ahead of Time compilation](TODO).
+This is what Fennel is calling [Ahead of Time compilation](https://fennel-lang.org/setup#performing-ahead-of-time-compilation).
 That way, our code will have a location for fennel to use and refer to. We can then rely on lua's `require` function to load our code.
 One obvious benefit from this approach is that there won't be any overhead to loading our code over what we'd be doing with normal Lua plugins.
 
@@ -383,7 +384,7 @@ Schematically, we can anticipate our buffer creation will look like a sequence o
 `Buffer Instance -> Content writing -> Keymap configuration -> Display in window`
 
 I am choosing this perspective because this is how I perceive things. 
-We'll express our view with the [threading macro](TODO) `->` in Fennel.
+We'll express our view with the [threading macro](https://fennel-lang.org/reference#and---threading-macros) `->` in Fennel.
 
 One benefit of this approach is that it will make it easy for us to write each stage as
 a separate function, which means it will also be easy to try different combinations of
@@ -913,7 +914,119 @@ So our plugin is working.
 Let's review one more time the entire code:
 
 ```lisp
-TODO
+(module more-like-that.main
+  {require {nvim aniseed.nvim
+            str aniseed.string
+            a aniseed.core}})
+
+(def this :more-like-that.main)
+
+(defn http-get [url]
+  (nvim.ex.sview url)
+  (let [content (nvim.fn.getline 1 "$")]
+    (nvim.ex.bd)
+    (nvim.fn.json_decode content)))
+
+(defn get-synonyms [w]
+  (let [url (..  "https://api.datamuse.com/words?rel_syn=" w)
+        res (a.map (fn [e] (. e :word)) (http-get url))]
+    (table.insert res 1 w)
+    res))
+
+(defn create-suggestion-buffer []
+  (let [buf (nvim.create_buf false true)]
+    (nvim.buf_set_option buf "bufhidden" "wipe")
+    buf))
+
+(defn make-window
+  [buf width height]
+  (let [opts {:style "minimal"
+              :relative "cursor"
+              :width width
+              :height height
+              :row 1
+              :col -1}
+        win (nvim.open_win buf true opts)]
+    (nvim.buf_set_option buf "modifiable" false)
+    (nvim.win_set_option win "cursorline" true)))
+
+(defn max-len [entries]
+  (nvim.fn.max (a.map a.count entries)))
+
+(defn prefix-space [word]
+  (.. " " word))
+
+(defn populate-buffer [buf suggestions]
+  (nvim.buf_set_lines buf 0 0 false (a.map prefix-space suggestions))
+  buf)
+
+(defn read-word []
+  "Return the word under the cursor"
+  (nvim.fn.expand "<cword>"))
+
+(defn replace-word [replacement]
+  "Replace the word under the cursor with `replacement`"
+  (nvim.command (.. "normal ciw" replacement)))
+
+(defn lua-call [mod function ...]
+  "expand to a lua function call for `function` inside `module`"
+  (let [astr (str.join ", " [...])]
+    (.. "lua require('" mod "')['" function "'](" astr ")")))
+
+(defn cancel-suggestion []
+  (nvim.ex.q))
+
+(defn confirm-selection []
+  (let [line (nvim.fn.getline ".")
+        word (str.trim line)]
+    (nvim.ex.q)
+    (replace-word word)))
+
+(defn move-selection [offset]
+  (let [[row col] (nvim.win_get_cursor 0)
+        row (if (> offset 0)
+              (math.min (+ offset row) (- (nvim.fn.line "$") 1))
+              (math.max (+ offset row) 1))]
+    (nvim.win_set_cursor 0 [row col])))
+
+(defn disable-keys [buf]
+  "Disable all letters mappings"
+  (each [_ c (ipairs [:a :b :c :d :e :f :g :h :i :j :k :l :m
+                      :n :o :p :q :r :s :t :u :v :w :x :y :z])]
+    (nvim.buf_set_keymap buf :n (.. "<C-" c ">") "<Nop>" {:silent true})
+    (nvim.buf_set_keymap buf :n (: c :upper) "<Nop>" {:silent true})
+    (nvim.buf_set_keymap buf :n c "<Nop>" {:silent true}))
+  buf)
+
+(defn install-popup-mappings [buf]
+  "Setup mappings for suggestion popup buffer"
+  (let [mapping {"<C-n>" [:move-selection 1]
+                 "<C-p>" [:move-selection -1]
+                 "k" [:move-selection -1]
+                 "j" [:move-selection 1]
+                 "q" [:cancel-suggestion]
+                 "<Esc>" [:cancel-suggestion]
+                 "<CR>"  [:confirm-selection]}]
+    (each [key args (pairs mapping)]
+      (nvim.buf_set_keymap
+        buf :n
+        key (.. ":" (lua-call this (unpack args)) "<CR>")
+        {:noremap true
+         :silent true})))
+  buf)
+
+(defn activate []
+  (let [suggestions (get-synonyms (read-word))
+        width (+ 2 (max-len suggestions))
+        height (length suggestions)]
+    (-> (create-suggestion-buffer)
+        (populate-buffer suggestions)
+        (disable-keys) ; first disable all keys
+        (install-popup-mappings) ; then enable the ones we want
+        (make-window width height))))
+
+(defn init []
+  (nvim.ex.command_ "MLTSynonyms" (lua-call this :activate)))
 ```
 
 # Wrapping things up
@@ -923,4 +1036,81 @@ We developped it against a running instance of Vim, by evaluating functions and 
 
 If you restart your vim now, it won't remember any of that. We need to properly package it in a way so our users can use their favourite Vim plugin manager to install our work, so it is loaded into their vim when they start their editor.
 
-In order to do that, one method is to use the Ahead of Time compilation technique we saw earlier, so that our users don't need to re-compile our code everytime it is loaded. Instead, we'll ship our plugin in such a way that what the user loads are our precompiled lua files.
+In order to do that, one method is to use the Ahead of Time compilation technique we saw earlier, so that our users don't need to re-compile our code everytime it is loaded.
+Instead, we'll ship our plugin in such a way that what the user loads are our precompiled lua files.
+
+It is also better for us to ship our own copy of aniseed. That way, we won't clash with any other plugin that might require a different version of it.
+
+The easiest way to go about this is probably to use Oliver Caldwell's `seed.sh` script, that he kindly prepared for us to use.
+
+In general, it is advised to use it in an empty repository, as it might override a few files that you'd rather keep intact. 
+But in our case, it is fine to use it in our project folder, which only contains One file for now.
+
+We'll simply run this command in our directory:
+
+```bash
+curl -fL https://raw.githubusercontent.com/Olical/aniseed/master/scripts/seed.sh | sh
+```
+
+This pulls a lot of things in our repository.  A bit too much to my taste.
+So we'll clean a few things before going further:
+
+```bash
+# First, we don't need a copy of the whole Aniseed project history, not its github config
+rm -rfv deps/aniseed/.git*
+# We don't need aniseed's seed, tests, or fnl files
+rm -rfv deps/aniseed/{seed,test,fnl}
+# we also don't need the example modules, not the tests
+find -type d -name example -exec rm -rfv {} \;
+rm -rvf test
+```
+
+We'll remove the `deps` target from the Makefile, as well as the `test` because we don't have any test.
+
+Then we'll rename `plugin/example.vim` to `plugin/mlt.vim`,
+and replace its content with this instead:
+
+```vim
+if has("nvim")
+  lua require("more-like-that.main").init()
+endif
+```
+
+As a final step, we need to "embed" aniseed into our project path, because we depend on it at runtime.
+So we'll follow the advice in the `Makefile` and uncomment the embedding part.
+
+Our `Makefile` now looks like that:
+
+```bash
+.PHONY: compile
+
+default: compile
+
+compile:
+        rm -rf lua
+        deps/aniseed/scripts/compile.sh
+        deps/aniseed/scripts/embed.sh aniseed more-like-that
+```
+
+But we also need to ensure we're using our embedded version of aniseed in our module.
+
+So we'll amend our module declaration in our `main.fnl` file, so it looks like that:
+
+```lisp
+(module more-like-that.main
+  {require {nvim more-like-that.aniseed.nvim
+            str more-like-that.aniseed.string
+            a more-like-that.aniseed.core}})
+```
+
+We can now run `make` to compile everything to Lua.
+
+Now in order to test all this, we'll make our plugin manager point to our installation by adding:
+
+```vim
+Plug 'hpointu/mlt.nvim' , {'dir': '~/Dev/nvim/more-like-that'}
+```
+
+to our vim config, so we point to our local directory.
+
+Open a new vim instance to edit a text file, and try the command `:MLTSynonyms`.
