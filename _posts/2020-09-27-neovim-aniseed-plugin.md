@@ -169,7 +169,7 @@ If possible, we'd like to avoid having to recompile and reload a .lua file, beca
 
 # Leveraging Lua's module system
 
-The AOT compilation described above defines clear compilation unit, the scope of the file we're compiling.
+The AOT compilation described above defines clear compilation units, the scope of the file we're compiling.
 This is a bit coarse, and compared to evaluating the whole buffer at once, like we did earlier with `\eb`, the only additional feature we are getting from this is the ability to load code from another compilation unit.
 This is already not bad, but we want to do better. We want to be able to persist the result of our evaluations in such a way that we can eval bits and bobs here and there, interactively, to incrementally build our system.
 
