@@ -401,11 +401,16 @@ We'll rewrite our `make-window` function so it looks like this:
               :width width
               :height height
               :row row
-              :col col}]
-    (nvim.open_win buf true opts)))
+              :col col}
+        win (nvim.open_win buf true opts)]
+    (nvim.buf_set_option buf "modifiable" false)
+    (nvim.win_set_option win "cursorline" true)))
 ```
 
-The only change here is I've put away the creation of the buffer, and we're now accepting the buffer as our first argument.
+The main change here is I've put away the creation of the buffer, and we're now accepting the buffer as our first argument.
+Also, we added a `cursorline` option to our window, to highlight the line the cursor is currently on, as well as setting the `modifiable` option to false in the buffer.
+
+Since we know this will be the last stage in our buffer initialization pipeline, there's no need to return the buffer at the end.
 
 Then we're going to wrap our buffer creation in its own function, and pass its result to `make-window`, like so:
 
@@ -425,8 +430,10 @@ Then we're going to wrap our buffer creation in its own function, and pass its r
               :width width
               :height height
               :row row
-              :col col}]
-    (nvim.open_win buf true opts)))
+              :col col}
+        win (nvim.open_win buf true opts)]
+    (nvim.buf_set_option buf "modifiable" false)
+    (nvim.win_set_option win "cursorline" true)))
 
 (-> (create-suggestion-buffer)
     (make-window 5 5 10 6))
@@ -519,21 +526,401 @@ The resulting window seemed a little too narrow to me, so I decided to leave one
       (make-window 5 5 width height)))
 ```
 
+# Implement word remplacement
+
+Our plugin will allow the user to select a word from the list of suggestions, and when he confirms his choice, we want to replace the word under the cursor by the entry he selected.
+
+Let's implement that replacement bit with a function such as :
+
+```lisp
+(defn replace-word [replacement] ...)
+```
+
+This sounds exactly like the type of thing I'm doing everyday on my Vim. I type `ciw` and type in the replacement word.
+Why not doing it like that then?
+
+```lisp
+(defn replace-word [replacement]
+  "Replace the word under the cursor with `replacement`"
+  (nvim.command (.. "normal ciw" replacement)))
+```
+
+See `:h :normal` to get the details, but briefly, this is a way to tell vim "Execute that sequence of key strokes as if I typed them in normal mode".
+
+# Implement word reading
+
+Also, in order to suggest the right synonyms, we'll need to know the word under the cursor.
+Vim has a special expression for that, `<cword>`, that we can expand using the `expand()` vim's function:
+
+```lisp
+(defn read-word []
+  "Return the word under the cursor"
+  (nvim.fn.expand "<cword>"))
+```
+
+That was an easy one.
+
 # Key mappings inside our little window
 
 Now that we have a window with a buffer, we'd like to limit the amount of things the user can do inside.
 
-The only things we want to be able to do are:
+The kind of actions we want to allow are:
 - move the cursor up and down
 - confirm the selection
 - cancel (exit suggestions window)
 
-Let's see how we can define the correct key mappings for the movement bit.
+Let's see how we can define the correct key mappings for these actions.
 
-The way we define mappings in Vim is with a flavour of the general `map` function. Such as `nmap` for normal modes mapping, `imap` for insert mode mappings, etc.
+The way we define mappings in Vim is with a flavour of the general `map` function.
+Such as `nmap` for normal modes mapping, `imap` for insert mode mappings, etc.
 
 This map function is taking a "Left Hand Side" key combination, and a "Right Hand Side" one, in such a way that someone typing the LHS keys in a sequence becomes equivalent of typing the RHS sequence instead.
 
 The function `nvim_buf_set_keymap` is available to us to define such mappings for a particular buffer.
 
 This is a tricky bit, because it will involve a lot of string manipulation.
+Especially for writing the RHS bit, because in our case, this RHS key combination involves calling our Fennel functions.
+
+The way to call a lua function from vim is by typing something like `:lua theFunction()`.
+But we need to locate our code and require it before being able to call it.
+
+So the type of strings we want to associate to our mapping would look like something like that:
+
+```vim
+:lua require('our.module')['our-function']()
+```
+
+Let's define a little helper to craft such a string.
+
+We'll use `aniseed.string`'s `join` function to join together the arguments with a `,`, so we need to amend our module definition:
+
+```lisp
+(module more-like-that.main
+  {require {nvim aniseed.nvim
+            a aniseed.core
+            str aniseed.string}})
+```
+
+And here's our helper function:
+
+```lisp
+(defn lua-call [mod function ...]
+  "expand to a lua function call for `function` inside `module`"
+  (let [astr (str.join ", " [...])]
+    (.. "lua require('" mod "')['" function "'](" astr ")")))
+```
+
+When invoked like:
+
+```lisp
+(lua-call :more-like-that.main :some-function 1 2 3)
+```
+
+We're getting this type of string back:
+
+```lisp
+"lua require('more-like-that.main')['some-function'](1, 2, 3)"
+```
+
+Now at the top of our module we can do something like: 
+
+```lisp
+(def this :more-like-that.main)
+```
+
+So we just have to use `this` whenever we need to use our module name.
+
+With this little tool in place, we can define a list of mappings to setup for our buffer, like so:
+
+```lisp
+(defn install-popup-mappings [buf]
+  "Setup mappings for suggestion popup buffer"
+  (let [mapping {"<C-n>" [:move-selection 1]
+                 "<C-p>" [:move-selection -1]
+                 "k" [:move-selection -1]
+                 "j" [:move-selection 1]
+                 "q" [:cancel-suggestion]
+                 "<Esc>" [:cancel-suggestion]
+                 "<CR>"  [:confirm-selection]}]
+    (each [key args (pairs mapping)]
+      (nvim.buf_set_keymap
+        buf :n
+        key (.. ":" (lua-call this (unpack args)) "<CR>")
+        {:noremap true
+         :silent true})))
+  buf)
+```
+
+This is quite verbose, but all we're doing is iterating over a `mapping` table, and declaring mappings using `buf_set_keymap` for each one of them, with the help of our little helper function `lua-call`.
+The `noremap` and `silent` options are described in the doc of vim.
+
+Also, we made sure to return the `buf` at the end, so we can use `install-popup-mappings` in our buffer initialization pipeline.
+
+Of course, our mapping are currently referring to non-existing functions.
+
+Let's see how we can go about implementing them.
+
+The easiest one, cancellation, is just a alias to `:q`.
+
+```lisp
+(defn cancel-suggestion []
+  (nvim.ex.q))
+```
+
+Confirming the current selection is simply a matter of reading the line under the cursor, trimming it so we don't get the extra spaces,
+and calling our already existing `replace-word` with that trimmed line (ah, and calling `:q` to close the suggestion window).
+
+```lisp
+(defn confirm-selection []
+  (let [line (nvim.fn.getline ".")
+        word (str.trim line)]
+    (nvim.ex.q)
+    (replace-word word)))
+```
+
+The trickiest one in that list is moving the cursor up and down,
+because we want to limit its range of motion.
+
+This is done using `math.min` and `math.max`.
+
+```lisp
+(defn move-selection [offset]
+  (let [[row col] (nvim.win_get_cursor 0)
+        row (if (> offset 0)
+              (math.min (+ offset row) (- (nvim.fn.line "$") 1))
+              (math.max (+ offset row) 1))]
+    (nvim.win_set_cursor 0 [row col])))
+```
+
+Here, `(nvim.win_get_cursor 0)` gives us the position of the cursor in the current window, and `(nvim.fn.line "$")` gives me the number of the last line in the buffer.
+Finally, `nvim.win_set_cursor` sets the position of the cursor.
+
+One last detail, we'd like disable all other keys from that buffer.
+
+Here's a hacky way of doing it:
+
+```lisp
+(defn disable-keys [buf]
+  "Disable all letters mappings"
+  (each [_ c (ipairs [:a :b :c :d :e :f :g :h :i :j :k :l :m
+                      :n :o :p :q :r :s :t :u :v :w :x :y :z])]
+    (nvim.buf_set_keymap buf :n (.. "<C-" c ">") "<Nop>" {:silent true})
+    (nvim.buf_set_keymap buf :n (: c :upper) "<Nop>" {:silent true})
+    (nvim.buf_set_keymap buf :n c "<Nop>" {:silent true}))
+  buf)
+```
+
+We are iterating over all letters, and for each of them, like say `k`, we're mapping `k`, `K`, and `<c-k>` to a no-op.
+
+Forgive the sacrilege please, I don't know how else I can do it...
+
+After adding the `disable-keys` and `install-popup-mappings`, function to the pipeline, let's review our entire code so far:
+
+```lisp
+(module more-like-that.main
+  {require {nvim aniseed.nvim
+            str aniseed.string
+            a aniseed.core}})
+
+(def this :more-like-that.main)
+
+(defn create-suggestion-buffer []
+  (let [buf (nvim.create_buf false true)]
+    (nvim.buf_set_option buf "bufhidden" "wipe")
+    buf))
+
+(defn make-window
+  [buf col row width height]
+  (let [opts {:style "minimal"
+              :relative "editor"
+              :width width
+              :height height
+              :row row
+              :col col}
+        win (nvim.open_win buf true opts)]
+    (nvim.buf_set_option buf "modifiable" false)
+    (nvim.win_set_option win "cursorline" true)))
+
+(defn max-len [entries]
+  (nvim.fn.max (a.map a.count entries)))
+
+(defn prefix-space [word]
+  (.. " " word))
+
+(defn populate-buffer [buf suggestions]
+  (nvim.buf_set_lines buf 0 0 false (a.map prefix-space suggestions))
+  buf)
+
+(defn read-word []
+  "Return the word under the cursor"
+  (nvim.fn.expand "<cword>"))
+
+(defn replace-word [replacement]
+  "Replace the word under the cursor with `replacement`"
+  (nvim.command (.. "normal ciw" replacement)))
+
+(defn lua-call [mod function ...]
+  "expand to a lua function call for `function` inside `module`"
+  (let [astr (str.join ", " [...])]
+    (.. "lua require('" mod "')['" function "'](" astr ")")))
+
+(defn cancel-suggestion []
+  (nvim.ex.q))
+
+(defn confirm-selection []
+  (let [line (nvim.fn.getline ".")
+        word (str.trim line)]
+    (nvim.ex.q)
+    (replace-word word)))
+
+(defn move-selection [offset]
+  (let [[row col] (nvim.win_get_cursor 0)
+        row (if (> offset 0)
+              (math.min (+ offset row) (- (nvim.fn.line "$") 1))
+              (math.max (+ offset row) 1))]
+    (nvim.win_set_cursor 0 [row col])))
+
+(defn disable-keys [buf]
+  "Disable all letters mappings"
+  (each [_ c (ipairs [:a :b :c :d :e :f :g :h :i :j :k :l :m
+                      :n :o :p :q :r :s :t :u :v :w :x :y :z])]
+    (nvim.buf_set_keymap buf :n (.. "<C-" c ">") "<Nop>" {:silent true})
+    (nvim.buf_set_keymap buf :n (: c :upper) "<Nop>" {:silent true})
+    (nvim.buf_set_keymap buf :n c "<Nop>" {:silent true}))
+  buf)
+
+(defn install-popup-mappings [buf]
+  "Setup mappings for suggestion popup buffer"
+  (let [mapping {"<C-n>" [:move-selection 1]
+                 "<C-p>" [:move-selection -1]
+                 "k" [:move-selection -1]
+                 "j" [:move-selection 1]
+                 "q" [:cancel-suggestion]
+                 "<Esc>" [:cancel-suggestion]
+                 "<CR>"  [:confirm-selection]}]
+    (each [key args (pairs mapping)]
+      (nvim.buf_set_keymap
+        buf :n
+        key (.. ":" (lua-call this (unpack args)) "<CR>")
+        {:noremap true
+         :silent true})))
+  buf)
+
+(let [suggestions ["Line-one" "Line-two" "and more"]
+      width (+ 2 (max-len suggestions))
+      height (length suggestions)]
+  (-> (create-suggestion-buffer)
+      (populate-buffer suggestions)
+      (disable-keys) ; first disable all keys
+      (install-popup-mappings) ; then enable the ones we want
+      (make-window 5 5 width height)))
+```
+
+That should wrap up the UX side of things.
+
+# Retrieving an actual list of synonyms
+
+Now that we are happy with the behaviour of our tiny window, we can finally focus on putting some real content in there.
+
+I looked around for databases of synonyms to download, but couldn't find any.
+Instead, I found a [nice HTTP api](https://www.datamuse.com/api/) that does exactly what I need.
+
+A little read of `:h http` should give me pointers on how to consume this type of content.
+
+Turns out the easiest way is to load the content of the URL into a buffer. I'll do that with `sview`, that will momentarily split the current window and load the content of the url into a new buffer.
+
+From there, I'll use the `json_decode()` function to parse the content of the buffer, before deleting our temporary buffer.
+
+Here's our function:
+
+```lisp
+(defn http-get [url]
+  (nvim.ex.sview url)
+  (let [content (nvim.fn.getline 1 "$")]
+    (nvim.ex.bd)
+    (nvim.fn.json_decode content)))
+```
+
+Now I can write a `get-synonyms` function that will call the API url with any word we want, and return a list of resulting words:
+
+```lisp
+(defn get-synonyms [w]
+  (let [url (..  "https://api.datamuse.com/words?rel_syn=" w)
+        res (a.map (fn [e] (. e :word)) (http-get url))]
+    (table.insert res 1 w)
+    res))
+```
+
+Notice I've taken the liberty to add the original word at the front of the list. I figured it would help the user to contextualize a bit.
+
+Now the only thing we need is to replace our stub list with a call to the `get-synonyms` function.
+
+```lisp
+(let [suggestions (get-synonyms (read-word))
+      width (+ 2 (max-len suggestions))
+      height (length suggestions)]
+  (-> (create-suggestion-buffer)
+      (populate-buffer suggestions)
+      (disable-keys) ; first disable all keys
+      (install-popup-mappings) ; then enable the ones we want
+      (make-window 5 5 width height)))
+```
+
+# Minor improvements
+
+Right now, our popup widow pops up at always the same place.
+It would be nice if, instead, its position was relative to the position of the cursor.
+
+We'll remove the `col` and `row` arguments of our `make-window` function,
+and change the `:relative` option value to `cursor`,
+so we open the window relatively to our cursor position.
+
+Also, in order to expose our plugin to Vim, we'll define a Command,
+`:MLTSynonyms`, that will trigger the code wrapped in the final let.
+
+Later, maybe, we could add `:MLTRhymes`? It seems the HTTP service we're using supports it.
+
+We'll first put that big let form in a function:
+
+```lisp
+(defn activate []
+  (let [suggestions (get-synonyms (read-word))
+        width (+ 2 (max-len suggestions))
+        height (length suggestions)]
+    (-> (create-suggestion-buffer)
+        (populate-buffer suggestions)
+        (disable-keys) ; first disable all keys
+        (install-popup-mappings) ; then enable the ones we want
+        (make-window width height))))
+```
+
+Now we want to define a custom command, we'll do this in an `init` function,
+that we'll make Vim call when it will later load our plugin.
+
+```lisp
+(defn init []
+  (nvim.ex.command_ "MLTSynonyms" (lua-call this :activate)))
+```
+
+The `command_` is the name our nvim module uses to expose `:command!`.
+
+We give our command the name "MLTSynonyms", and its replacement text is the lua invokation of our `activate` function.
+
+_Tip: just evaluating the declaration of the command should register our command in your running instance of Vim. You can veryfy that by then typing the vim command :MLT and to a tab completion to ensure it's here. If you do that while being on an interesting word, you should even be able to replace it with a synonym!_
+
+So our plugin is working.
+
+Let's review one more time the entire code:
+
+```lisp
+TODO
+```
+
+# Wrapping things up
+
+If you pause for a moment now, you'll realise we never actually installed our plugin anywhere.
+We developped it against a running instance of Vim, by evaluating functions and forms on the fly thanks to Conjure/Aniseed.
+
+If you restart your vim now, it won't remember any of that. We need to properly package it in a way so our users can use their favourite Vim plugin manager to install our work, so it is loaded into their vim when they start their editor.
+
+In order to do that, one method is to use the Ahead of Time compilation technique we saw earlier, so that our users don't need to re-compile our code everytime it is loaded. Instead, we'll ship our plugin in such a way that what the user loads are our precompiled lua files.
