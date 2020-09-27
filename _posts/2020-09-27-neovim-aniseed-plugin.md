@@ -77,7 +77,7 @@ We want to be able to count on our runtime to provide us with the feedback we ne
 Conjure is here to help you doing exactly that. But Conjure is not a small thing. It is built around [Aniseed](https://github.com/Olical/aniseed), also made by Oliver Caldwell.
 Aniseed is a nice piece of software that will make our life much easier to write our plugin in Fennel. But I reckon that this is a lot to take in at once if, like me, you have no previous experience with this type of stuff. 
 
-So, we'll try to deconstruct it. We'll make the assumption that Conjure is installed and well configured (although it's working out of the box), but we'll look at things only as Conjure users. Although we'll assume most of the time than we know nothing, I still suggest you take a little detour through the [Conjure School](https://github.com/Olical/conjure#try-without-installing), at least to get a feel for what Conjure can do for its users.
+So, we'll try to deconstruct it. We'll make the assumption that Conjure is installed and well configured (although it's working out of the box), but we'll look at things only as Conjure users. Although we'll assume most of the time that we know nothing, I still suggest you take a little detour through the [Conjure School](https://github.com/Olical/conjure#try-without-installing), at least to get a feel for what Conjure can do for its users.
 
 # Getting familiar with Fennel inside Neovim
 
