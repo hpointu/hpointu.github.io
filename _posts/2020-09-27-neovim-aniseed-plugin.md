@@ -92,13 +92,13 @@ I just pressed `\ee` (see [Conjure doc](https://github.com/Olical/conjure/blob/m
 
 Cool, so now we're going to write a fennel function. And we don't want to change a winning team, so let's just wrap our previous code, and try to evaluate that:
 
-```lisp
+```clojure
 (fn hello [] (print "Hello you!"))
 ```
 
 Now trying to evaluate that gives us this output from Conjure (using `\er` as a variant of `\ee` to make sure I'm evaluating the whole form. Again, the Conjure doc is quite good to see all key mappings):
 
-```lisp
+```clojure
 ; eval (root-form): (fn hello [] (print "Hello you!"))
 #<function: 0x416b2d18>
 ```
@@ -106,7 +106,7 @@ Now trying to evaluate that gives us this output from Conjure (using `\er` as a 
 Ok... It looks like this has been compiled correctly, and it's returning me a function. What about we call the return value on the spot by surrounding our function definition with parenthesis?
 (Notice the `root-form` being sent to conjure has an extra set of parenthesis, meaning we're calling the function we've just defined)
 
-```lisp
+```clojure
 ; eval (root-form): ((fn hello [] (print "Hello you!")))
 ; (out) Hello you!
 nil
@@ -116,7 +116,7 @@ Great so this is definitely working! We can see the expected output in the conju
 
 Now we'll make it accept an argument, and try to call it with an arbitrary value.
 
-```lisp
+```clojure
 (fn hello [name]
   (print (.. "Hello " name "!")))
 
@@ -126,7 +126,7 @@ Now we'll make it accept an argument, and try to call it with an arbitrary value
 Reading the [Fennel documentation](https://fennel-lang.org/reference#string-concatenation) teaches us that the `..` function is for concatenating strings.
 If we try to eval, using `\eb`, our whole buffer, we get something like that in conjure's log:
 
-```lisp
+```clojure
 ; eval (buf): /home/freddy/Dev/nvim/raw/test.fnl
 ; (out) Hello Zozo!
 nil
@@ -134,7 +134,7 @@ nil
 
 Although if we try to eval the definition of the function and the call to that function separately, something weird happens:
 
-```lisp
+```clojure
 ; eval (current-form): (fn hello [name] (print (.. "Hello " name "!")...
 #<function: 0x40c7e9e8>
 ; --------------------------------------------------------------------------------
@@ -251,7 +251,7 @@ So all we want for now, is being able to try and build our plugin code by just e
 
 So here we are, inside our `main.fnl` file, and we're going to write this :
 
-```lisp
+```clojure
 ;; Note that the module name we're defining matches the file structure
 ;; of our project.
 (module more-like-that.main)
@@ -266,13 +266,13 @@ We can eval the whole buffer to let the runtime know about our module and our fu
 
 Now that our vim knows about our function, we can evaluate this form on its own, within that module : 
 
-```lisp
+```clojure
 (hello "you")
 ```
 
 Just pressing `\ee` on it, and we shall see our previously defined function being called and our message being printed.
 
-```lisp
+```clojure
 ; eval (current-form): (hello "you")
 ; (out) Hello, you!
 nil
@@ -306,7 +306,7 @@ We'll have a bit more fun and we'll use floating windows instead.
 
 Let's try to define a very simple function, to open a window in vim. It will take a position relative to the vim's main window (a column number and a row number) as well as a size (width and height):
 
-```lisp
+```clojure
 (defn open-window [col row width height] ...)
 ```
 
@@ -320,7 +320,7 @@ Now I'll let you read the documentation for that, as well as `:h nvim_open_win`,
 One piece of information we need is the how to access that from fennel.
 One way we can access the Lua api (fennel compiles to Lua, and have access to all Lua functions), is with things like:
 
-```lisp
+```clojure
 (vim.api.nvim_create_buf ...)
 ```
 
@@ -329,7 +329,7 @@ Instead, Aniseed expose a little Lua module `aniseed.nvim` which makes access to
 
 In order to use this module, we'll use Aniseed's module loading system. Along with our module definition, we can include a `require` map:
 
-```lisp
+```clojure
 (module more-like-that.main
   {require {nvim aniseed.nvim}})
 ```
@@ -339,7 +339,7 @@ What we're doing here is loading the `aniseed.nvim` module and make it accessibl
 We can now have a go at writing our window-opening function.
 Our first version will look something like that:
 
-```lisp
+```clojure
 (defn make-window
   [col row width height]
   (let [buf (nvim.create_buf false true) ;; a non-listed, scratch buffer
@@ -394,7 +394,7 @@ So to leverage that, we'll make each function of our pipeline to take a buffer a
 
 We'll rewrite our `make-window` function so it looks like this:
 
-```lisp
+```clojure
 (defn make-window
   [buf col row width height]
   (let [opts {:style "minimal"
@@ -415,7 +415,7 @@ Since we know this will be the last stage in our buffer initialization pipeline,
 
 Then we're going to wrap our buffer creation in its own function, and pass its result to `make-window`, like so:
 
-```lisp
+```clojure
 (module more-like-that.main
   {require {nvim aniseed.nvim}})
 
@@ -447,7 +447,7 @@ According to the doc, we pass it a line number twice, some boolean, and an array
 
 Here's our function for now:
 
-```lisp
+```clojure
 (defn populate-buffer [buf suggestions]
   (nvim.buf_set_lines buf 0 0 false suggestions)
   buf)
@@ -455,7 +455,7 @@ Here's our function for now:
 
 That we're plugging into our pipeline like so:
 
-```lisp
+```clojure
 (-> (create-suggestion-buffer)
     (populate-buffer ["Line-one" "Line-two" "and more"])
     (make-window 5 5 10 6))
@@ -469,7 +469,7 @@ _(Note: you can close this little window by simply doing `:q`, as any other norm
 
 One thing we can improve straight away, is to make the height of our window match the number of entries to suggest.
 
-```lisp
+```clojure
 (let [suggestions ["Line-one" "Line-two" "and more"]]
   (-> (create-suggestion-buffer)
       (populate-buffer suggestions)
@@ -482,7 +482,7 @@ We want a way to know the maximum length given a list of entries. Let's write a 
 
 We'll use the useful `aniseed.core` module that we'll add to our module definition:
 
-```lisp
+```clojure
 (module more-like-that.main
   {require {nvim aniseed.nvim
             a aniseed.core}})
@@ -499,7 +499,7 @@ This is a short demo on a very simple function, but I will work in this way for 
 
 Anyways, let's look at our new buffer initialization:
 
-```lisp
+```clojure
 (defn max-len [entries]
   (nvim.fn.max (a.map a.count entries)))
 
@@ -511,7 +511,7 @@ Anyways, let's look at our new buffer initialization:
 
 The resulting window seemed a little too narrow to me, so I decided to leave one blank column on each side of my window:
 
-```lisp
+```clojure
 (defn prefix-space [word]
   (.. " " word))
 
@@ -533,14 +533,14 @@ Our plugin will allow the user to select a word from the list of suggestions, an
 
 Let's implement that replacement bit with a function such as :
 
-```lisp
+```clojure
 (defn replace-word [replacement] ...)
 ```
 
 This sounds exactly like the type of thing I'm doing everyday on my Vim. I type `ciw` and type in the replacement word.
 Why not doing it like that then?
 
-```lisp
+```clojure
 (defn replace-word [replacement]
   "Replace the word under the cursor with `replacement`"
   (nvim.command (.. "normal ciw" replacement)))
@@ -553,7 +553,7 @@ See `:h :normal` to get the details, but briefly, this is a way to tell vim "Exe
 Also, in order to suggest the right synonyms, we'll need to know the word under the cursor.
 Vim has a special expression for that, `<cword>`, that we can expand using the `expand()` vim's function:
 
-```lisp
+```clojure
 (defn read-word []
   "Return the word under the cursor"
   (nvim.fn.expand "<cword>"))
@@ -595,7 +595,7 @@ Let's define a little helper to craft such a string.
 
 We'll use `aniseed.string`'s `join` function to join together the arguments with a `,`, so we need to amend our module definition:
 
-```lisp
+```clojure
 (module more-like-that.main
   {require {nvim aniseed.nvim
             a aniseed.core
@@ -604,7 +604,7 @@ We'll use `aniseed.string`'s `join` function to join together the arguments with
 
 And here's our helper function:
 
-```lisp
+```clojure
 (defn lua-call [mod function ...]
   "expand to a lua function call for `function` inside `module`"
   (let [astr (str.join ", " [...])]
@@ -613,19 +613,19 @@ And here's our helper function:
 
 When invoked like:
 
-```lisp
+```clojure
 (lua-call :more-like-that.main :some-function 1 2 3)
 ```
 
 We're getting this type of string back:
 
-```lisp
+```clojure
 "lua require('more-like-that.main')['some-function'](1, 2, 3)"
 ```
 
 Now at the top of our module we can do something like: 
 
-```lisp
+```clojure
 (def this :more-like-that.main)
 ```
 
@@ -633,7 +633,7 @@ So we just have to use `this` whenever we need to use our module name.
 
 With this little tool in place, we can define a list of mappings to setup for our buffer, like so:
 
-```lisp
+```clojure
 (defn install-popup-mappings [buf]
   "Setup mappings for suggestion popup buffer"
   (let [mapping {"<C-n>" [:move-selection 1]
@@ -663,7 +663,7 @@ Let's see how we can go about implementing them.
 
 The easiest one, cancellation, is just a alias to `:q`.
 
-```lisp
+```clojure
 (defn cancel-suggestion []
   (nvim.ex.q))
 ```
@@ -671,7 +671,7 @@ The easiest one, cancellation, is just a alias to `:q`.
 Confirming the current selection is simply a matter of reading the line under the cursor, trimming it so we don't get the extra spaces,
 and calling our already existing `replace-word` with that trimmed line (ah, and calling `:q` to close the suggestion window).
 
-```lisp
+```clojure
 (defn confirm-selection []
   (let [line (nvim.fn.getline ".")
         word (str.trim line)]
@@ -684,7 +684,7 @@ because we want to limit its range of motion.
 
 This is done using `math.min` and `math.max`.
 
-```lisp
+```clojure
 (defn move-selection [offset]
   (let [[row col] (nvim.win_get_cursor 0)
         row (if (> offset 0)
@@ -700,7 +700,7 @@ One last detail, we'd like disable all other keys from that buffer.
 
 Here's a hacky way of doing it:
 
-```lisp
+```clojure
 (defn disable-keys [buf]
   "Disable all letters mappings"
   (each [_ c (ipairs [:a :b :c :d :e :f :g :h :i :j :k :l :m
@@ -717,7 +717,7 @@ Forgive the sacrilege please, I don't know how else I can do it...
 
 After adding the `disable-keys` and `install-popup-mappings` functions to the pipeline, let's review our entire code so far:
 
-```lisp
+```clojure
 (module more-like-that.main
   {require {nvim aniseed.nvim
             str aniseed.string
@@ -834,7 +834,7 @@ From there, I'll use the `json_decode()` function to parse the content of the bu
 
 Here's our function:
 
-```lisp
+```clojure
 (defn http-get [url]
   (nvim.ex.sview url)
   (let [content (nvim.fn.getline 1 "$")]
@@ -844,7 +844,7 @@ Here's our function:
 
 Now I can write a `get-synonyms` function that will call the API url with any word we want, and return a list of resulting words:
 
-```lisp
+```clojure
 (defn get-synonyms [w]
   (let [url (..  "https://api.datamuse.com/words?rel_syn=" w)
         res (a.map (fn [e] (. e :word)) (http-get url))]
@@ -856,7 +856,7 @@ Notice I've taken the liberty to add the original word at the front of the list.
 
 Now the only thing we need is to replace our stub list with a call to the `get-synonyms` function.
 
-```lisp
+```clojure
 (let [suggestions (get-synonyms (read-word))
       width (+ 2 (max-len suggestions))
       height (length suggestions)]
@@ -883,7 +883,7 @@ Later, maybe, we could add `:MLTRhymes`? It seems the HTTP service we're using s
 
 We'll first put that big let form in a function:
 
-```lisp
+```clojure
 (defn activate []
   (let [suggestions (get-synonyms (read-word))
         width (+ 2 (max-len suggestions))
@@ -898,7 +898,7 @@ We'll first put that big let form in a function:
 Now we want to define a custom command, we'll do this in an `init` function,
 that we'll make Vim call when it will later load our plugin.
 
-```lisp
+```clojure
 (defn init []
   (nvim.ex.command_ "MLTSynonyms" (lua-call this :activate)))
 ```
@@ -913,7 +913,7 @@ So our plugin is working.
 
 Let's review one more time the entire code:
 
-```lisp
+```clojure
 (module more-like-that.main
   {require {nvim aniseed.nvim
             str aniseed.string
@@ -1096,7 +1096,7 @@ But we also need to ensure we're using our embedded version of aniseed in our mo
 
 So we'll amend our module declaration in our `main.fnl` file, so it looks like that:
 
-```lisp
+```clojure
 (module more-like-that.main
   {require {nvim more-like-that.aniseed.nvim
             str more-like-that.aniseed.string
